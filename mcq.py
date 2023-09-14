@@ -12,9 +12,10 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import streamlit as st
 import os
 import pdfplumber
-from io import StringIOpip
+from io import StringIO
+import openai
 
-from langchain.retrieval import RetrievalQA
+from langchain.chains import RetrievalQA
 
 
 def set_llm_chat(model, temperature):
