@@ -141,13 +141,49 @@ if "last_uploaded_files" not in st.session_state:
 openai.api_base = "https://openrouter.ai/api/v1"
 openai.api_key = st.secrets["OPENROUTER_API_KEY"]
 
-st.set_page_config(page_title='GPT and Med Ed', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
-st.title("GPT and Medical Education")
+st.set_page_config(page_title='Tools for Med Ed', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
+st.title("Tools for Medical Education")
 st.write("ALPHA version 0.3")
+
+disclaimer = "placeholder"
+
+mcq_template = """Answer the question based only on the following context:
+{context}
+
+Question: {faculty_question}
+"""
+
+mcq_generation = """Generate 3 multiple choice questions for the context provided. Follow these best practices for optimal MCQ design:
+
+1. **Focus on a Single Learning Objective**: Each question should target a specific learning objective. Avoid "double-barreled" questions that assess multiple objectives at once.
+ 
+2. **Ensure Clinical Relevance**: Questions should be grounded in clinical scenarios or real-world applications, especially for medical students. This ensures the assessment is relevant to their future practice.
+ 
+3. **Avoid Ambiguity**: The wording should be clear and unambiguous. Avoid using negatives, especially double negatives, as they can be confusing.
+ 
+4. **Use Standardized Terminology**: Stick to universally accepted medical terminology. This ensures that students are being tested on content knowledge rather than interpretation of terms.
+ 
+5. **Avoid Tricky Questions**: The goal is to assess knowledge, not to trick students. Do not phrase negatively as in "which is NOT a correct option". Ensure that distractors (incorrect options) are plausible but clearly incorrect upon careful reading.
+ 
+6. **Randomize Option Order**: This minimizes the chance of students guessing based on patterns.
+ 
+7. **Avoid "All of the Above" or "None of the Above"**: These can be confusing and often don't provide clear insight into a student's understanding.
+ 
+8 **Balance Between Recall and Application**: While some questions might test basic recall, strive to include questions that assess application, analysis, and synthesis of knowledge.
+ 
+9. **Avoid Cultural or Gender Bias**: Ensure questions and scenarios are inclusive and don't inadvertently favor a particular group.
+ 
+10. **Use Clear and Concise Language**: Avoid lengthy stems or vignettes unless necessary for the context. The complexity should come from the medical content, not the language.
+
+11. **Make Plausible**: All options should be homogeneous and plausible to avoid cueing to the correct option.
+
+12. **No Flaws**: Each item should be reviewed to identify and remove technical flaws that add irrelevant difficulty or benefit savvy test-takers."""
+ 
+
 
 if check_password():
 
-    st.header("Chat with your PDFs!")
+    st.header("Learn from your PDFs!")
     st.info("""Embeddings, i.e., reading your file(s) and converting words to numbers, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) and indexed for searching. Then,
             your selected model (e.g., gpt-3.5-turbo-16k) is used to answer your questions.""")
     st.warning("""Some PDFs are images and not formatted text. If the summary feature doesn't work, you may first need to convert your PDF
@@ -182,9 +218,20 @@ if check_password():
         user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
     if pdf_chat_option == "Custom Question":
         user_question = st.text_input("Please enter your own question about the PDF(s):")
+        
+    if pdf_chat_option == "Generate MCQ":
+        mcq_options = st.radio("Select an Option", ("Generate 3 MCQs", "Generate MCQs on a Specific Topic"))
+        
+        if mcq_options == "Generate 3 MCQs":
+            user_question = mcq_generation
+            
+        if mcq_options == "Generate MCQs on a Specific Topic":
+            user_focus = st.text_input("Please enter a covered topic for the focus of your MCQ:")
+            user_question = f'{mcq_generation}' + f'\n\nFocus for questions: {user_focus}'
 
     if st.button("Generate a Response"):
         index_context = f'Use only the reference document for knowledge. Question: {user_question}'
+        
         pdf_answer = qa(index_context)
 
         # Append the user question and PDF answer to the session state lists

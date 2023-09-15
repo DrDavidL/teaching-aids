@@ -10,6 +10,7 @@ pdfplumber = "*"
 faiss-cpu = "*"
 streamlit = "*"
 pandas = "*"
+tiktoken = "*"
 
 [dev-packages]
 
