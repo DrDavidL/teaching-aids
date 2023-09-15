@@ -30,7 +30,7 @@ def set_llm_chat(model, temperature):
     else:
         headers={ "HTTP-Referer": "https://fsm-gpt-med-ed.streamlit.app", # To identify your app
           "X-Title": "GPT and Med Ed"}
-        return ChatOpenAI(model = model, openai_api_base = "https://openrouter.ai/api/v1", openai_api_key = st.secrets["OPENROUTER_API_KEY"], temperature=temperature, max_tokens = 500, headers=headers)
+        return ChatOpenAI(model = model, openai_api_base = "https://openrouter.ai/api/v1", openai_api_key = st.secrets["OPENROUTER_API_KEY"], temperature=temperature, max_tokens = 1500, headers=headers)
 
 def truncate_text(text, max_characters):
     if len(text) <= max_characters:
@@ -145,7 +145,40 @@ st.set_page_config(page_title='Tools for Med Ed', layout = 'centered', page_icon
 st.title("Tools for Medical Education")
 st.write("ALPHA version 0.3")
 
-disclaimer = "placeholder"
+with st.sidebar.expander("Select a GPT Language Model", expanded=True):
+    st.session_state.model = st.selectbox("Model Options", ("openai/gpt-3.5-turbo", "openai/gpt-3.5-turbo-16k", "openai/gpt-4", "anthropic/claude-instant-v1", "google/palm-2-chat-bison", "meta-llama/codellama-34b-instruct", "meta-llama/llama-2-70b-chat", "gryphe/mythomax-L2-13b", "nousresearch/nous-hermes-llama2-13b"), index=1)
+    if st.session_state.model == "google/palm-2-chat-bison":
+        st.warning("The Google model doesn't stream the output, but it's fast. (Will add Med-Palm2 when it's available.)")
+        st.markdown("[Information on Google's Palm 2 Model](https://ai.google/discover/palm2/)")
+    if st.session_state.model == "openai/gpt-4":
+        st.warning("GPT-4 is much more expensive and sometimes, not always, better than others.")
+        st.markdown("[Information on OpenAI's GPT-4](https://platform.openai.com/docs/models/gpt-4)")
+    if st.session_state.model == "anthropic/claude-instant-v1":
+        st.markdown("[Information on Anthropic's Claude-Instant](https://www.anthropic.com/index/releasing-claude-instant-1-2)")
+    if st.session_state.model == "meta-llama/llama-2-70b-chat":
+        st.markdown("[Information on Meta's Llama2](https://ai.meta.com/llama/)")
+    if st.session_state.model == "openai/gpt-3.5-turbo":
+        st.markdown("[Information on OpenAI's GPT-3.5](https://platform.openai.com/docs/models/gpt-3-5)")
+    if st.session_state.model == "openai/gpt-3.5-turbo-16k":
+        st.markdown("[Information on OpenAI's GPT-3.5](https://platform.openai.com/docs/models/gpt-3-5)")
+    if st.session_state.model == "gryphe/mythomax-L2-13b":
+        st.markdown("[Information on Gryphe's Mythomax](https://huggingface.co/Gryphe/MythoMax-L2-13b)")
+    if st.session_state.model == "meta-llama/codellama-34b-instruct":
+        st.markdown("[Information on Meta's CodeLlama](https://huggingface.co/codellama/CodeLlama-34b-Instruct-hf)")
+
+disclaimer = """**Disclaimer:** This is a tool to assist education regarding artificial intelligence. Your use of this tool accepts the following:   
+1. This tool does not generate validated medical content. \n 
+2. This tool is not a real doctor. \n    
+3. You will not take any medical action based on the output of this tool. \n   
+"""
+
+
+
+with st.expander('About Tools for Med Ed - Important Disclaimer'):
+    st.write("Author: David Liebovitz, MD, Northwestern University")
+    st.info(disclaimer)
+    st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
+    st.write("Last updated 9/15/23")
 
 mcq_template = """Answer the question based only on the following context:
 {context}
@@ -153,37 +186,34 @@ mcq_template = """Answer the question based only on the following context:
 Question: {faculty_question}
 """
 
-mcq_generation = """Generate 3 multiple choice questions for the context provided. Follow these best practices for optimal MCQ design:
-
+mcq_generation = """Generate 3 multiple choice questions for the context provided. Include the correct answer after the question. Use practices for optimal MCQ design:
 1. **Focus on a Single Learning Objective**: Each question should target a specific learning objective. Avoid "double-barreled" questions that assess multiple objectives at once.
- 
-2. **Ensure Clinical Relevance**: Questions should be grounded in clinical scenarios or real-world applications, especially for medical students. This ensures the assessment is relevant to their future practice.
- 
-3. **Avoid Ambiguity**: The wording should be clear and unambiguous. Avoid using negatives, especially double negatives, as they can be confusing.
- 
-4. **Use Standardized Terminology**: Stick to universally accepted medical terminology. This ensures that students are being tested on content knowledge rather than interpretation of terms.
- 
-5. **Avoid Tricky Questions**: The goal is to assess knowledge, not to trick students. Do not phrase negatively as in "which is NOT a correct option". Ensure that distractors (incorrect options) are plausible but clearly incorrect upon careful reading.
- 
-6. **Randomize Option Order**: This minimizes the chance of students guessing based on patterns.
- 
-7. **Avoid "All of the Above" or "None of the Above"**: These can be confusing and often don't provide clear insight into a student's understanding.
- 
-8 **Balance Between Recall and Application**: While some questions might test basic recall, strive to include questions that assess application, analysis, and synthesis of knowledge.
- 
-9. **Avoid Cultural or Gender Bias**: Ensure questions and scenarios are inclusive and don't inadvertently favor a particular group.
- 
-10. **Use Clear and Concise Language**: Avoid lengthy stems or vignettes unless necessary for the context. The complexity should come from the medical content, not the language.
+2. **Ensure Clinical Relevance**: Questions should be grounded in clinical scenarios or real-world applications. 
+3. **Avoid Ambiguity or Tricky Questions**: The wording should be clear and unambiguous. Avoid using negatives, especially double negatives. 
+4. **Use Standardized Terminology**: Stick to universally accepted medical terminology. 
+5. **Avoid "All of the Above" or "None of the Above"**
+6. **Balance Between Recall and Application**: While some questions might test basic recall, strive to include questions that assess application, analysis, and synthesis of knowledge.
+7. **Avoid Cultural or Gender Bias**: Ensure questions and scenarios are inclusive and don't inadvertently favor a particular group.
+8. **Use Clear and Concise Language**: Avoid lengthy stems or vignettes unless necessary for the context. The complexity should come from the medical content, not the language.
+9. **Make Plausible**: All options should be homogeneous and plausible to avoid cueing to the correct option. Distractors (incorrect options) are plausible but clearly incorrect upon careful reading.
+10. **No Flaws**: Each item should be reviewed to identify and remove technical flaws that add irrelevant difficulty or benefit savvy test-takers.
 
-11. **Make Plausible**: All options should be homogeneous and plausible to avoid cueing to the correct option.
+**Here is a sample MCQ. Follow this format**:
+1. What is the general structure of recommendations for treating Rheumatoid Arthritis according to the American College of Rheumatology (ACR)?
 
-12. **No Flaws**: Each item should be reviewed to identify and remove technical flaws that add irrelevant difficulty or benefit savvy test-takers."""
+Options:
+A. Single algorithm with 3 treatment phases irrespective of disease duration
+B. Distinction between early (≤6 months) and established RA with separate algorithm for each
+C. Treat-to-target strategy with aim at reducing disease activity by ≥50%
+D. Initial therapy with Methotrexate monotherapy with or without addition of glucocorticoids
+Answer: B. Distinction between early (≤6 months) and established RA with separate algorithm for each
+"""
  
 
 
 if check_password():
 
-    st.header("Learn from your PDFs!")
+    st.header("Analyze your PDFs!")
     st.info("""Embeddings, i.e., reading your file(s) and converting words to numbers, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) and indexed for searching. Then,
             your selected model (e.g., gpt-3.5-turbo-16k) is used to answer your questions.""")
     st.warning("""Some PDFs are images and not formatted text. If the summary feature doesn't work, you may first need to convert your PDF
@@ -206,21 +236,23 @@ if check_password():
         llm = set_llm_chat(model=st.session_state.model, temperature=st.session_state.temp)
         # llm = ChatOpenAI(model_name='gpt-3.5-turbo-16k', openai_api_base = "https://api.openai.com/v1/")
 
-        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True,)
 
     else:
         st.warning("No files uploaded.")       
         st.write("Ready to answer your questions!")
 
-
-    pdf_chat_option = st.radio("Select an Option", ("Summary", "Custom Question", "Generate MCQ"))
+    col1, col2 = st.columns(2)
+    with col1:
+        pdf_chat_option = st.radio("Select an Option", ("Generate MCQ", "Summary", "Custom Question",))
     if pdf_chat_option == "Summary":
         user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
     if pdf_chat_option == "Custom Question":
         user_question = st.text_input("Please enter your own question about the PDF(s):")
         
     if pdf_chat_option == "Generate MCQ":
-        mcq_options = st.radio("Select an Option", ("Generate 3 MCQs", "Generate MCQs on a Specific Topic"))
+        with col2: 
+            mcq_options = st.radio("Select an Option", ("Generate 3 MCQs", "Generate MCQs on a Specific Topic"))
         
         if mcq_options == "Generate 3 MCQs":
             user_question = mcq_generation
