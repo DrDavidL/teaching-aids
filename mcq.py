@@ -14,7 +14,7 @@ import os
 import pdfplumber
 from io import StringIO
 import openai
-
+from prompts import *
 from langchain.chains import RetrievalQA
 
 
@@ -180,34 +180,7 @@ with st.expander('About Tools for Med Ed - Important Disclaimer'):
     st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
     st.write("Last updated 9/15/23")
 
-mcq_template = """Answer the question based only on the following context:
-{context}
 
-Question: {faculty_question}
-"""
-
-mcq_generation = """Generate 3 multiple choice questions for the context provided. Include the correct answer after the question. Use practices for optimal MCQ design:
-1. **Focus on a Single Learning Objective**: Each question should target a specific learning objective. Avoid "double-barreled" questions that assess multiple objectives at once.
-2. **Ensure Clinical Relevance**: Questions should be grounded in clinical scenarios or real-world applications. 
-3. **Avoid Ambiguity or Tricky Questions**: The wording should be clear and unambiguous. Avoid using negatives, especially double negatives. 
-4. **Use Standardized Terminology**: Stick to universally accepted medical terminology. 
-5. **Avoid "All of the Above" or "None of the Above"**
-6. **Balance Between Recall and Application**: While some questions might test basic recall, strive to include questions that assess application, analysis, and synthesis of knowledge.
-7. **Avoid Cultural or Gender Bias**: Ensure questions and scenarios are inclusive and don't inadvertently favor a particular group.
-8. **Use Clear and Concise Language**: Avoid lengthy stems or vignettes unless necessary for the context. The complexity should come from the medical content, not the language.
-9. **Make Plausible**: All options should be homogeneous and plausible to avoid cueing to the correct option. Distractors (incorrect options) are plausible but clearly incorrect upon careful reading.
-10. **No Flaws**: Each item should be reviewed to identify and remove technical flaws that add irrelevant difficulty or benefit savvy test-takers.
-
-**Here is a sample MCQ. Follow this format**:
-1. What is the general structure of recommendations for treating Rheumatoid Arthritis according to the American College of Rheumatology (ACR)?
-
-Options:
-A. Single algorithm with 3 treatment phases irrespective of disease duration
-B. Distinction between early (≤6 months) and established RA with separate algorithm for each
-C. Treat-to-target strategy with aim at reducing disease activity by ≥50%
-D. Initial therapy with Methotrexate monotherapy with or without addition of glucocorticoids
-Answer: B. Distinction between early (≤6 months) and established RA with separate algorithm for each
-"""
  
 
 
@@ -236,7 +209,7 @@ if check_password():
         llm = set_llm_chat(model=st.session_state.model, temperature=st.session_state.temp)
         # llm = ChatOpenAI(model_name='gpt-3.5-turbo-16k', openai_api_base = "https://api.openai.com/v1/")
 
-        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True,)
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="refine", retriever=retriever, return_source_documents=True,)
 
     else:
         st.warning("No files uploaded.")       
@@ -246,7 +219,12 @@ if check_password():
     with col1:
         pdf_chat_option = st.radio("Select an Option", ("Generate MCQ", "Summary", "Custom Question",))
     if pdf_chat_option == "Summary":
-        user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
+        st.write("Generated with [Chain of Density](https://arxiv.org/abs/2309.04269) methodology.")
+        word_count = st.slider("~Word Count for the Summary", 20, 500, 100)
+        # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
+        user_question = chain_of_density_summary
+        user_question = user_question.format(word_count=word_count, context = "{context}")
+        # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
     if pdf_chat_option == "Custom Question":
         user_question = st.text_input("Please enter your own question about the PDF(s):")
         
