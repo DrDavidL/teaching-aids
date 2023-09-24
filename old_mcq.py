@@ -1,6 +1,6 @@
 from operator import itemgetter
 
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.schema.output_parser import StrOutputParser
@@ -17,6 +17,11 @@ import openai
 from prompts import *
 from langchain.chains import RetrievalQA
 
+@st.cache_data
+def set_qa(_llm, _retriever, template):
+    PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
+    chain_type_kwargs = {"prompt": PROMPT}
+    return RetrievalQA.from_chain_type(llm=_llm, chain_type="stuff", retriever=_retriever, chain_type_kwargs=chain_type_kwargs)
 
 def set_llm_chat(model, temperature):
     if model == "openai/gpt-3.5-turbo":
@@ -208,8 +213,10 @@ if check_password():
 
         llm = set_llm_chat(model=st.session_state.model, temperature=st.session_state.temp)
         # llm = ChatOpenAI(model_name='gpt-3.5-turbo-16k', openai_api_base = "https://api.openai.com/v1/")
+        
+        
 
-        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True,)
+        # qa = RetrievalQA.from_chain_type(llm=llm, chain_type="refine", retriever=retriever, return_source_documents=True,)
 
     else:
         st.warning("No files uploaded.")       
@@ -217,49 +224,49 @@ if check_password():
 
     col1, col2 = st.columns(2)
     with col1:
-        pdf_chat_option = st.radio("Select an Option", ("Generate MCQs from your PDF", "Summarize your PDF", "Ask Questions about your PDF","Appraise a Clinical Trial PDF"))
-    
-    if pdf_chat_option == "Appraise a Clinical Trial PDF":
-        st.write('Note GPT4 is much better; may take a few minutes to run.')
-        word_count = st.slider("~Word Count for the Summary. Most helpful for very long articles", 100, 1000, 250)
-        user_question = clinical_trial_template
-        user_question = user_question.format(word_count=word_count, context = "{context}")
-    
-    if pdf_chat_option == "Summarize your PDF":
+        pdf_chat_option = st.radio("Select an Option", ("Generate MCQ", "Summary", "Custom Question",))
+    if pdf_chat_option == "Summary":
         st.write("Generated with [Chain of Density](https://arxiv.org/abs/2309.04269) methodology.")
-        word_count = st.slider("~Word Count for the Summary. Most helpful for very long articles", 100, 1000, 250)
+        word_count = st.slider("~Word Count for the Summary", 20, 500, 100)
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
-        user_question = chain_of_density_summary_template
-        user_question = user_question.format(word_count=word_count, context = "{context}")
-        # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
-    if pdf_chat_option == "Ask Questions about your PDF":
-        user_question = st.text_input("Please enter your own question about the PDF(s):")
+        qa_input = word_count
+        qa = set_qa(llm, retriever, chain_of_density_summary_template)
         
-    if pdf_chat_option == "Generate MCQs from your PDF":
+        # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
+    if pdf_chat_option == "Custom Question":
+        user_question = st.text_input("Please enter your own question about the PDF(s):")
+        qa_input = user_question
+        qa = set_qa(llm, retriever, ask_question_template)
+        
+        
+    if pdf_chat_option == "Generate MCQ":
         num_mcq = st.slider("Number of MCQs", 1, 10, 3)
         with col2: 
-            mcq_options = st.radio("Select a Sub_Option", ("Generate MCQs", "Generate MCQs on a Specific Topic"))
+            mcq_options = st.radio("Select an Option", ("Generate MCQs", "Generate MCQs on a Specific Topic"))
         
         if mcq_options == "Generate MCQs":
-            user_question = mcq_generation_template
-            user_question = user_question.format(num_mcq=num_mcq, context = "{context}")
+            qa_input = num_mcq
+            qa = set_qa(llm, retriever, mcq_generation_template)
+            
             
         if mcq_options == "Generate MCQs on a Specific Topic":
             user_focus = st.text_input("Please enter a covered topic for the focus of your MCQ:")
-            user_question = f'Topic for question generation: {user_focus}' + f'\n\n {mcq_generation_template}'
-            user_question = user_question.format(num_mcq=num_mcq, context = "{context}")
+            qa_input = f'{num_mcq} focused on {user_focus}'
+            qa = set_qa(llm, retriever, mcq_generation_template)
+            
 
     if st.button("Generate a Response"):
-        index_context = f'Use only the reference document for knowledge. Question: {user_question}'
+        # index_context = f'Use only the reference document for knowledge. Question: {user_question}'
         
-        pdf_answer = qa(index_context)
+        pdf_answer = qa.run(qa_input)
 
         # Append the user question and PDF answer to the session state lists
         st.session_state.pdf_user_question.append(user_question)
         st.session_state.pdf_user_answer.append(pdf_answer)
 
         # Display the PDF answer
-        st.write(pdf_answer["result"])
+        # st.write(pdf_answer["result"])
+        st.write(pdf_answer)
 
         # Prepare the download string for the PDF questions
         pdf_download_str = f"{disclaimer}\n\nPDF Questions and Answers:\n\n"
