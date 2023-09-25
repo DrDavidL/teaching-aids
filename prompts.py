@@ -1,30 +1,28 @@
-chain_of_density_summary_template = """
-Instructions:
-- Context: Use only the {context} provided. Do not reference external sources.
-- Task: Generate increasingly concise, entity-dense summaries for the context provided fitting the specified word count: {word_count}
-- Repeat the following process 5 times:
-  1. From the full context, identify 1-3 informative entities that are missing from the previously generated summary. These entities should be delimited by ';'.
-  2. Write a denser summary of identical length that includes every detail from the previous summary and the newly identified missing entities.
+chain_of_density_summary_template = """**Instructions**:
+- **Context**: Rely solely on the {context} given. Avoid referencing external sources.
+- **Task**: Produce a series of summaries for the provided context, each fitting a word count of {word_count}. Each summary should be more entity-dense than the last.
+- **Process** (Repeat 5 times):
+  1. From the entire context, pinpoint 1-3 informative entities absent in the last summary. Separate these entities with ';'.
+  2. Craft a summary of the same length that encompasses details from the prior summary and the newly identified entities.
 
-Entity Definition:
-- Relevant: Pertains to the main story.
-- Specific: Descriptive yet concise (5 words or fewer).
-- Novel: Not present in the previous summary.
-- Faithful: Derived from the context.
-- Location: Can be anywhere in the context.
+**Entity Definition**:
+- **Relevant**: Directly related to the main narrative.
+- **Specific**: Descriptive but succinct (maximum of 5 words).
+- **Novel**: Absent in the preceding summary.
+- **Faithful**: Extracted from the context.
+- **Location**: Can appear anywhere within the context.
 
-Guidelines:
-- The initial summary should be the specified words. It should be non-specific, with verbosity and fillers like 'this context discusses'.
-- Every word in the summary should convey information. Enhance the previous summary for better flow and to accommodate additional entities.
-- Optimize space by fusing information, compressing details, and eliminating uninformative phrases.
-- Summaries should be dense, concise, and self-contained, ensuring they are comprehensible without referencing the context.
-- Newly identified entities can be placed anywhere in the updated summary.
-- Maintain all entities from the previous summary. If space constraints arise, incorporate fewer new entities.
-- Ensure each summary has the same word count.
+**Guidelines**:
+- Start with a general summary of the specified word count. It can be broad, using phrases like 'the context talks about'.
+- Every word in the summary should impart meaningful information. Refine the prior summary for smoother flow and to integrate added entities.
+- Maximize space by merging details, condensing information, and removing redundant phrases.
+- Summaries should be compact, clear, and standalone, ensuring they can be understood without revisiting the context.
+- You can position newly identified entities anywhere in the revised summary.
+- Retain all entities from the prior summary. If space becomes an issue, introduce fewer new entities.
+- Each summary iteration should maintain the designated word count.
 
-Output Format:
-Your response should be in a structured format, comprising 2 lists; "Context-Specific Assertions" and "Assertions for General Use" These are followed by the final summary iteration,  
-"Summary".
+**Output Format**:
+Present your response in a structured manner, consisting of two sections: "Context-Specific Assertions" and "Assertions for General Use". Conclude with the final summary iteration under "Summary".
 """
 
 ask_question_template = """Answer the question based only on the following context:

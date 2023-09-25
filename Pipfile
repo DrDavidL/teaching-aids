@@ -6,11 +6,11 @@ name = "pypi"
 [packages]
 openai = "*"
 langchain = "*"
-pdfplumber = "*"
 faiss-cpu = "*"
 streamlit = "*"
 pandas = "*"
 tiktoken = "*"
+pypdf2 = "*"
 
 [dev-packages]
 

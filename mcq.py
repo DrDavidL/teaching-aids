@@ -11,7 +11,7 @@ from langchain.schema import format_document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import streamlit as st
 import os
-import pdfplumber
+from PyPDF2 import PdfReader
 from io import StringIO
 import openai
 from prompts import *
@@ -44,7 +44,7 @@ def load_docs(files):
     for file_path in files:
         file_extension = os.path.splitext(file_path.name)[1]
         if file_extension == ".pdf":
-            pdf_reader = pdfplumber.open(file_path)
+            pdf_reader = PdfReader(file_path)
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text()
