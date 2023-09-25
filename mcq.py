@@ -11,7 +11,7 @@ from langchain.schema import format_document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import streamlit as st
 import os
-from PyPDF2 import PdfReader
+import fitz
 from io import StringIO
 import openai
 from prompts import *
@@ -38,24 +38,27 @@ def truncate_text(text, max_characters):
     else:
         truncated_text = text[:max_characters]
         return truncated_text
-@st.cache_data
+
+
+@st.cache_data  # Updated decorator name from cache_data to cache
 def load_docs(files):
     all_text = ""
-    for file_path in files:
-        file_extension = os.path.splitext(file_path.name)[1]
+    for file in files:
+        file_extension = os.path.splitext(file.name)[1]
         if file_extension == ".pdf":
-            pdf_reader = PdfReader(file_path)
+            pdf_data = file.read()  # Read the file into bytes
+            pdf_reader = fitz.open("pdf", pdf_data)  # Open the PDF from bytes
             text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text()
+            for page in pdf_reader:
+                text += page.get_text()
             all_text += text
+
         elif file_extension == ".txt":
-            stringio = StringIO(file_path.getvalue().decode("utf-8"))
+            stringio = StringIO(file.getvalue().decode("utf-8"))
             text = stringio.read()
             all_text += text
         else:
             st.warning('Please provide txt or pdf.', icon="⚠️")
-    # st.write(all_text)
     return all_text
 
 
@@ -226,11 +229,18 @@ if check_password():
         user_question = user_question.format(word_count=word_count, context = "{context}")
     
     if pdf_chat_option == "Summarize your PDF":
-        st.write("Generated with [Chain of Density](https://arxiv.org/abs/2309.04269) methodology.")
-        word_count = st.slider("~Word Count for the Summary. Most helpful for very long articles", 100, 1000, 250)
+        
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
-        user_question = chain_of_density_summary_template
-        user_question = user_question.format(word_count=word_count, context = "{context}")
+        with col2:
+            summary_method= st.radio("Select a Summary Method", ("Standard Summary", "Chain of Density"))
+        word_count = st.slider("Approximate Word Count for the Summary. Most helpful for very long articles", 100, 1000, 250)
+        if summary_method == "Chain of Density":
+            st.write("Generated with [Chain of Density](https://arxiv.org/abs/2309.04269) methodology.")
+            user_question = chain_of_density_summary_template
+            user_question = user_question.format(word_count=word_count, context = "{context}")
+        if summary_method == "Standard Summary":
+            user_question = key_points_summary_template
+            user_question = user_question.format(word_count=word_count, context = "{context}")
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
     if pdf_chat_option == "Ask Questions about your PDF":
         user_question = st.text_input("Please enter your own question about the PDF(s):")

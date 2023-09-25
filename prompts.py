@@ -100,3 +100,10 @@ Guidelines:
 Output Format:
 Your response should be in a structured format, comprising 2 lists; "Trial-Specific Critiques" and "General Clinical Trial Concerns". These are followed by the final appraisal output, "Critical Appraisal".
 """
+
+key_points_summary_template = """Given the {context}, generate a concise and comprehensive summary that captures the main ideas and key details. 
+The summary should be approximately {word_count} words in length. Ensure that the summary is coherent, free of redundancies, and effectively conveys the essence of the original content. The format for the summary should be:
+**Factual Assertions**: Concise bulleted statements that convey the main ideas and key details of the original content.
+
+**Summary**: A coherent and comprehensive summary of the original content.
+"""

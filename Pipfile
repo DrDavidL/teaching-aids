@@ -10,7 +10,7 @@ faiss-cpu = "*"
 streamlit = "*"
 pandas = "*"
 tiktoken = "*"
-pypdf2 = "*"
+pymupdf = "*"
 
 [dev-packages]
 
