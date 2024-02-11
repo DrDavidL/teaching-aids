@@ -291,6 +291,6 @@ if check_password2():
 
                 except Exception as e:
                     st.error(f'An error occurred: {e}')
-    with st.sidebar:
-        if "messages" in st.session_state:
-            st.write(st.session_state.messages)
+    # with st.sidebar:
+    #     if "messages" in st.session_state:
+    #         st.write(st.session_state.messages)
