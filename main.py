@@ -136,6 +136,7 @@ if check_password2():
                 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             
         with st.expander("Prompt Engineering Strategies"):
+            st.warning('If updated, it\'s used once "Submit Question to start chat" is clicked!')
             choose_system_prompt = st.selectbox("Choose a system prompt", ["Medical Educator System", "General Expert", "Your own!"])
             if choose_system_prompt == "Your own!":
                 system_prompt = st.text_area("Enter your own prompt")
@@ -179,7 +180,7 @@ if check_password2():
     if st.session_state.improved_question:
         st.text_area("Improved Question", st.session_state.improved_question, height=150, key="improved_question_text_area")
     use_original = st.checkbox("Check to use your original question (otherwise we'll use the updated version)")
-    send_question = st.button("Submit Question to start chat (clears chat history")
+    send_question = st.button("Submit Question to Start Chat (clears old chat history; last still appears for convenience).")
 
     # Display previous chat messages. This loop goes through all messages and displays them, skipping system messages.
     if "messages" in st.session_state:
