@@ -51,8 +51,8 @@ if "message_history" not in st.session_state:
 if "improved_question" not in st.session_state:
     st.session_state["improved_question"] = ""
     
-if "messsages" not in st.session_state:
-    st.session_state["messages"] = []
+# if "messsages" not in st.session_state:
+#     st.session_state["messages"] = []
 
 prompt_engineering_strategies = [
     "Self Discovery Prompting",
@@ -129,7 +129,11 @@ if check_password2():
     with st.sidebar:
         with st.expander("Set Model Options"):
             # Show model options
-            st.session_state.openai_model = st.selectbox("Select a model", ["gpt-3.5-turbo-0125", "gpt-4-turbo-preview"])
+            st.session_state.openai_model = st.selectbox("Select a model", ["gpt-3.5-turbo-0125", "gpt-4-turbo-preview", "google/gemini-pro"])
+            if st.session_state.openai_model == "google/gemini-pro":
+                client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
+            else:
+                client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             
         with st.expander("Prompt Engineering Strategies"):
             choose_system_prompt = st.selectbox("Choose a system prompt", ["Medical Educator System", "General Expert", "Your own!"])
@@ -159,9 +163,8 @@ if check_password2():
             st.write(f"Selected: {strategy_string}")
 
     user_prompt = st.text_input("Enter your question:")
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    
     if st.button("Make my question better!"):
-
 
         improved_question = client.chat.completions.create(
             model=st.session_state["openai_model"],
@@ -175,7 +178,7 @@ if check_password2():
     # Display the response from the API.
     if st.session_state.improved_question:
         st.text_area("Improved Question", st.session_state.improved_question, height=150, key="improved_question_text_area")
-    use_original = st.checkbox("Send original question (otherwise will send improved question)")
+    use_original = st.checkbox("Check to use your original question (otherwise we'll use the updated version)")
     send_question = st.button("Submit Question to start chat (clears chat history")
 
     # Display previous chat messages. This loop goes through all messages and displays them, skipping system messages.
@@ -203,6 +206,7 @@ if check_password2():
             st.markdown(first_prompt)
 
         # Generate and display the assistant's response.
+
         with st.chat_message("assistant"):
             # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
             stream = client.chat.completions.create(
@@ -218,44 +222,24 @@ if check_password2():
         # Append the assistant's response to the chat history.
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.session_state.message_history.append({"role": "assistant", "content": response})
-
-
-        
-        
-
-
-
-
-
-    # Retrieve the OpenAI API key from environment variables for security reasons.
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-
-    # Create an OpenAI client instance. This is necessary for sending requests to the OpenAI API.
-    client = OpenAI(api_key=openai_api_key)
-
-    # Check if the model selection has been made; if not, set a default model.
-    if "openai_model" not in st.session_state:
-        st.session_state["openai_model"] = "gpt-3.5-turbo-0125"
-
-    # Initialize the chat history. Since GPT doesn't remember previous interactions, we need to manage the conversation history ourselves.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        # Add a system message to set the context for the GPT model.
-        st.session_state.messages.append({"role": "system", "content": medical_educator_system_prompt})
         
 
 
 
 
     # Capture user input. If the user enters a question, proceed with generating a response.
-    if prompt := st.chat_input("Please ask follow-up questions here!"):
+    if follow_up_question := st.chat_input("Please ask follow-up questions here!"):
         # Append the user's question to the chat history.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.session_state.message_history.append({"role": "user", "content": prompt})
+        if st.session_state.openai_model == "google/gemini-pro":
+            client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
+        else:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        st.session_state.messages.append({"role": "user", "content": follow_up_question})
+        st.session_state.message_history.append({"role": "user", "content": follow_up_question})
 
         # Display the user's question in the chat interface.
         with st.chat_message("user"):
-            st.markdown(prompt)
+            st.markdown(follow_up_question)
 
         # Generate and display the assistant's response.
         with st.chat_message("assistant"):
@@ -306,3 +290,5 @@ if check_password2():
 
                 except Exception as e:
                     st.error(f'An error occurred: {e}')
+    with st.sidebar:
+        st.write(st.session_state.messages)
