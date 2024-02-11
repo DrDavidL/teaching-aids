@@ -1,11 +1,14 @@
 from operator import itemgetter
 
 from langchain.prompts import ChatPromptTemplate
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.chat_models import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
+from langchain_community.embeddings import OpenAIEmbeddings
+# from langchain.embeddings import OpenAIEmbeddings
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
+# from langchain.vectorstores import FAISS
 from langchain.schema.runnable import RunnableMap
 from langchain.schema import format_document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -19,18 +22,18 @@ from langchain.chains import RetrievalQA
 
 
 def set_llm_chat(model, temperature):
-    if model == "openai/gpt-3.5-turbo":
-        model = "gpt-3.5-turbo"
+    if model == "openai/gpt-3.5-turbo-0125":
+        model = "gpt-3.5-turbo-0125"
     if model == "openai/gpt-3.5-turbo-16k":
         model = "gpt-3.5-turbo-16k"
-    if model == "openai/gpt-4":
-        model = "gpt-4"
-    if model == "gpt-4" or model == "gpt-3.5-turbo" or model == "gpt-3.5-turbo-16k":
+    if model == "openai/gpt-4-turbo-preview":
+        model = "gpt-4-turbo-preview"
+    if model == "gpt-4-turbo-preview" or model == "gpt-3.5-turbo-0125":
         return ChatOpenAI(model=model, openai_api_base = "https://api.openai.com/v1/", openai_api_key = st.secrets["OPENAI_API_KEY"], temperature=temperature)
     else:
         headers={ "HTTP-Referer": "https://fsm-gpt-med-ed.streamlit.app", # To identify your app
           "X-Title": "GPT and Med Ed"}
-        return ChatOpenAI(model = model, openai_api_base = "https://openrouter.ai/api/v1", openai_api_key = st.secrets["OPENROUTER_API_KEY"], temperature=temperature, max_tokens = 1500, headers=headers)
+        return ChatOpenAI(model = model, openai_api_base = "https://openrouter.ai/api/v1", openai_api_key = st.secrets["OPENROUTER_API_KEY"], temperature=temperature, max_tokens = 1500, )
 
 def truncate_text(text, max_characters):
     if len(text) <= max_characters:
@@ -62,7 +65,7 @@ def load_docs(files):
     return all_text
 
 
-@st.cache_data
+@st.cache_resource
 def create_retriever(texts):  
     
     embeddings = OpenAIEmbeddings(model = "text-embedding-ada-002",
@@ -149,25 +152,8 @@ st.title("Tools for Medical Education")
 st.write("ALPHA version 0.3")
 
 with st.sidebar.expander("Select a GPT Language Model", expanded=True):
-    st.session_state.model = st.selectbox("Model Options", ("openai/gpt-3.5-turbo", "openai/gpt-3.5-turbo-16k", "openai/gpt-4", "anthropic/claude-instant-v1", "google/palm-2-chat-bison", "meta-llama/codellama-34b-instruct", "meta-llama/llama-2-70b-chat", "gryphe/mythomax-L2-13b", "nousresearch/nous-hermes-llama2-13b"), index=1)
-    if st.session_state.model == "google/palm-2-chat-bison":
-        st.warning("The Google model doesn't stream the output, but it's fast. (Will add Med-Palm2 when it's available.)")
-        st.markdown("[Information on Google's Palm 2 Model](https://ai.google/discover/palm2/)")
-    if st.session_state.model == "openai/gpt-4":
-        st.warning("GPT-4 is much more expensive and sometimes, not always, better than others.")
-        st.markdown("[Information on OpenAI's GPT-4](https://platform.openai.com/docs/models/gpt-4)")
-    if st.session_state.model == "anthropic/claude-instant-v1":
-        st.markdown("[Information on Anthropic's Claude-Instant](https://www.anthropic.com/index/releasing-claude-instant-1-2)")
-    if st.session_state.model == "meta-llama/llama-2-70b-chat":
-        st.markdown("[Information on Meta's Llama2](https://ai.meta.com/llama/)")
-    if st.session_state.model == "openai/gpt-3.5-turbo":
-        st.markdown("[Information on OpenAI's GPT-3.5](https://platform.openai.com/docs/models/gpt-3-5)")
-    if st.session_state.model == "openai/gpt-3.5-turbo-16k":
-        st.markdown("[Information on OpenAI's GPT-3.5](https://platform.openai.com/docs/models/gpt-3-5)")
-    if st.session_state.model == "gryphe/mythomax-L2-13b":
-        st.markdown("[Information on Gryphe's Mythomax](https://huggingface.co/Gryphe/MythoMax-L2-13b)")
-    if st.session_state.model == "meta-llama/codellama-34b-instruct":
-        st.markdown("[Information on Meta's CodeLlama](https://huggingface.co/codellama/CodeLlama-34b-Instruct-hf)")
+    st.session_state.model = st.selectbox("Model Options", ("openai/gpt-3.5-turbo-0125", "openai/gpt-4-turbo-preview", "google/gemini-pro"), index=0)
+
 
 disclaimer = """**Disclaimer:** This is a tool to assist education regarding artificial intelligence. Your use of this tool accepts the following:   
 1. This tool does not generate validated medical content. \n 
