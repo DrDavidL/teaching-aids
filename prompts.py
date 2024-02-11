@@ -115,25 +115,25 @@ sent to GPT-4 to answer the user's question.
 """
 
 
-problem_solving_Imperfect_Prompting = """
-"When responding, intentionally leave out clarity or completeness to stimulate creative or unexpected outputs."
-"""
+# problem_solving_Imperfect_Prompting = """
+# "When responding, intentionally leave out clarity or completeness to stimulate creative or unexpected outputs."
+# """
 
 problem_solving_Persistent_Context_and_Custom_Instructions_Prompting = """
 "Maintain a persistent context as a medical expert throughout our interaction. Structure your responses to include safety precautions."
 """
 
 problem_solving_Multi_Persona_Prompting = """
-"Adopt multiple personas or perspectives in your response, providing diverse insights on the query."
+"Adopt multiple personas or perspectives explicitly in your response, providing diverse insights on the query."
 """
 
 problem_solving_Chain_of_Thought_CoT_Prompting = """
 "Detail your step-by-step reasoning process when addressing the question posed."
 """
 
-problem_solving_Retrieval_Augmented_Generation_RAG_Prompting = """
-"Incorporate external data or recent findings relevant to the query in your response for a more informed answer."
-"""
+# problem_solving_Retrieval_Augmented_Generation_RAG_Prompting = """
+# "Incorporate external data or recent findings relevant to the query in your response for a more informed answer."
+# """
 
 problem_solving_Chain_of_Thought_Factored_Decomposition_Prompting = """
 "Break down the complex question into smaller, manageable parts, answering each before synthesizing a final response."
@@ -155,61 +155,61 @@ problem_solving_Certainty_and_Uncertainty_Prompting = """
 "Express the level of certainty or uncertainty in your response to the query."
 """
 
-problem_solving_Vagueness_Prompting = """
-"Assume creative liberties in your response due to the intentional vagueness of the query."
-"""
+# problem_solving_Vagueness_Prompting = """
+# "Assume creative liberties in your response due to the intentional vagueness of the query."
+# """
 
 problem_solving_Catalogs_or_Frameworks_for_Prompting = """
-"Utilize a specific catalog or framework to structure your response to the query."
+"Identify and utilize a specific catalog or framework to structure your response to the query."
 """
 
-problem_solving_Flipped_Interaction_Prompting = """
-"Assume the role of the questioner, engaging the user in a flipped interaction based on the query."
-"""
+# problem_solving_Flipped_Interaction_Prompting = """
+# "Assume the role of the questioner, engaging the user in a flipped interaction based on the query."
+# """
 
-problem_solving_Self_Reflection_Prompting = """
-"Reflect on your previous responses or information generated, evaluating or summarizing your thoughts on the query."
-"""
+# problem_solving_Self_Reflection_Prompting = """
+# "Reflect on your previous responses or information generated, evaluating or summarizing your thoughts on the query."
+# """
 
-problem_solving_Add_On_Prompting = """
-"Suggest using an add-on tool or feature to enhance the response to the query."
-"""
+# problem_solving_Add_On_Prompting = """
+# "Suggest using an add-on tool or feature to enhance the response to the query."
+# """
 
-problem_solving_Conversational_Prompting = """
-"Engage in a natural, flowing conversation, moving beyond simple Q&A based on the query."
-"""
+# problem_solving_Conversational_Prompting = """
+# "Engage in a natural, flowing conversation, moving beyond simple Q&A based on the query."
+# """
 
-problem_solving_Prompt_to_Code_Prompting = """
-"Generate programming code based on the problem statement presented in the query."
-"""
+# problem_solving_Prompt_to_Code_Prompting = """
+# "Generate programming code based on the problem statement presented in the query."
+# """
 
-problem_solving_Target_Your_Response_TAYOR_Prompting = """
-"Specify the desired format, tone, and content in your response to the query."
-"""
+# problem_solving_Target_Your_Response_TAYOR_Prompting = """
+# "Specify the desired format, tone, and content in your response to the query."
+# """
 
-problem_solving_Macros_and_End_Goal_Prompting = """
-"Set an end-goal for the interaction, possibly using macros to streamline achieving this goal based on the query."
-"""
+# problem_solving_Macros_and_End_Goal_Prompting = """
+# "Set an end-goal for the interaction, possibly using macros to streamline achieving this goal based on the query."
+# """
 
 problem_solving_Tree_of_Thoughts_ToT_Prompting = """
 "Explore multiple branches of thought or possibilities before concluding your response to the query."
 """
 
 problem_solving_Trust_Layers_for_Prompting = """
-"Incorporate mechanisms to verify the reliability and trustworthiness of your response to the query."
+"Provide suggestions to verify the reliability and trustworthiness of your response to the query."
 """
 
-problem_solving_Directional_Stimulus_Prompting_DSP = """
-"Guide your response towards a specific line of thought or conclusion using subtle hints or cues based on the query."
-"""
+# problem_solving_Directional_Stimulus_Prompting_DSP = """
+# "Guide your response towards a specific line of thought or conclusion using subtle hints or cues based on the query."
+# """
 
-problem_solving_Privacy_Invasive_Prompting = """
-"Ensure privacy by avoiding requests for personal data or sensitive information in your response to the query."
-"""
+# problem_solving_Privacy_Invasive_Prompting = """
+# "Ensure privacy by avoiding requests for personal data or sensitive information in your response to the query."
+# """
 
-problem_solving_Illicit_or_Disallowed_Prompting = """
-"Comply with ethical guidelines, avoiding prohibited or harmful content in your response to the query."
-"""
+# problem_solving_Illicit_or_Disallowed_Prompting = """
+# "Comply with ethical guidelines, avoiding prohibited or harmful content in your response to the query."
+# """
 
 problem_solving_Chain_of_Density_CoD_Prompting = """
 "Condense complex information into a comprehensible summary in your response to the query."
@@ -231,16 +231,16 @@ problem_solving_Overcoming_Dumbing_Down_Prompting = """
 "Provide in-depth, nuanced answers instead of oversimplified explanations in your response to the query."
 """
 
-problem_solving_DeepFakes_to_TrueFakes_Prompting = """
-"Identify and explain characteristics of deepfake technology, guiding on distinguishing authentic from manipulated content based on the query."
-"""
+# problem_solving_DeepFakes_to_TrueFakes_Prompting = """
+# "Identify and explain characteristics of deepfake technology, guiding on distinguishing authentic from manipulated content based on the query."
+# """
 
-problem_solving_Disinformation_Detection_and_Removal_Prompting = """
-"Identify potential disinformation within the text, suggesting corrections or clarifications based on the query."
-"""
+# problem_solving_Disinformation_Detection_and_Removal_Prompting = """
+# "Identify potential disinformation within the text, suggesting corrections or clarifications based on the query."
+# """
 
 problem_solving_Emotionally_Expressed_Prompting = """
-"Craft responses with a particular emotional tone or respond appropriately to the emotional content of the query."
+"A physician asked this question and **lives are at stake** - you must be clear, accurate, and comprehensive."
 """
 
 
@@ -355,7 +355,7 @@ Translate the adapted reasoning modules into a structured reasoning plan in JSON
     }
   ]
 }
-### Use the SELECT-ADAPT-IMPLEMENT Strategy above to accurately answer the user's question.
+### Use the SELECT-ADAPT-IMPLEMENT Strategy above to accurately and fully answer the user's question.
 """
 
 medical_educator_system_prompt = """You are an expert medical educator, deeply knowledgeable in the latest medical science, treatments, and pedagogical methods. Your responses should reflect the highest standard of current medical understanding and educational theory. You are expected to:
@@ -378,4 +378,12 @@ system_prompt_improve_question = """Infer what a physician educator might want t
 For example, if the user asks "Tell me about indapamide" you respond, "Provide a comprehensive overview of indapamide, including its mechanism of action, indications, contraindications, common side effects, and important considerations for prescribing or monitoring patients?" 
 Do not ask for more details - instead infer them and let the user update the details as needed, which they can do, before submitting the question to the GPT model. Solely return that updated question
 with the improved specificity and detail optimized for direct answering by a GPT model.
+"""
+
+expert_instruction_content = """
+The following is a conversation between a user and an assistant regarding a medical or scientific query. 
+As an expert evidence-based academic physician and researcher, critically analyze the assistant's response. 
+Please assess the response for scientific accuracy, logical consistency, and the presence of evidence-based reasoning. 
+Identify any unsupported claims, logical fallacies, or deviations from established medical or scientific consensus. 
+Your analysis should help ensure that the information provided is reliable, accurate, and in line with current best practices in evidence-based medicine and research.
 """

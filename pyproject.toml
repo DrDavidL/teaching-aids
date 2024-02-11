@@ -16,6 +16,7 @@ tiktoken = "^0.6.0"
 faiss-cpu = "^1.7.4"
 langchain-community = "^0.0.19"
 fpdf = "^1.7.2"
+pytz = "^2024.1"
 
 
 [build-system]
