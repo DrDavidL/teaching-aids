@@ -182,7 +182,7 @@ if check_password2():
     send_question = st.button("Submit Question to start chat (clears chat history")
 
     # Display previous chat messages. This loop goes through all messages and displays them, skipping system messages.
-    if st.session_state.messages is not []:
+    if "messages" in st.session_state:
         for message in st.session_state.messages:
             if message["role"] != "system":
                 with st.chat_message(message["role"]):
@@ -291,4 +291,5 @@ if check_password2():
                 except Exception as e:
                     st.error(f'An error occurred: {e}')
     with st.sidebar:
-        st.write(st.session_state.messages)
+        if "messages" in st.session_state:
+            st.write(st.session_state.messages)
