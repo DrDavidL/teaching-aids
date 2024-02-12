@@ -137,7 +137,7 @@ if check_password2():
                 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             
         with st.expander("Prompt Engineering Strategies"):
-            st.warning('If updated, it\'s used once "Submit Question to start chat" is clicked!')
+            st.warning('If options are changed, they are applied after "Submit Question to start chat" is clicked!')
             choose_system_prompt = st.selectbox("Choose a system prompt", ["Medical Educator System", "General Expert", "Your own!"])
             if choose_system_prompt == "Your own!":
                 system_prompt = st.text_area("Enter your own prompt")
