@@ -108,6 +108,35 @@ The summary should be approximately {word_count} words in length. Ensure that th
 **Summary**: A coherent and comprehensive summary of the original content.
 """
 
+key_points_list_for_chatbot = """Given the {context}, generate a comprehensive list of topics and sub-topics suitable for teaching and discussion. 
+Ensure this list is coherent, free of redundancies, and effectively effectively organized to convey the essence of the original material. Format as per this example with likely greater detail and many subtopics:
+
+# Sample Topic Overview: Environmental Conservation
+
+### I. Introduction to Conservation
+- **A. Definition and Importance**
+- **B. Historical Overview**
+
+### II. Major Environmental Issues
+- **A. Climate Change**
+- **B. Loss of Biodiversity**
+- **C. Pollution and Waste Management**
+
+### III. Conservation Strategies
+- **A. Protected Areas**
+- **B. Sustainable Practices**
+- **C. Restoration Projects**
+
+### IV. Role of Technology in Conservation
+- **A. Data Collection and Monitoring**
+- **B. Conservation Technologies**
+
+### V. Engaging Communities in Conservation Efforts
+- **A. Education and Awareness**
+- **B. Community-Based Projects**
+
+"""
+
 main_system_prompt = """"You are an expert in prompt generation for GPT-4 that returns greatly enhanced prompts for a user to further revise as needed. You 
 will receive a user's prompt input and a particular prompting method. You will then generate a revised prompt for the user incorporating the selected method. Infer what
 the user wants to achieve and please add more detail to the prompt as needed for optimal user satisfaction while also incorporating the prompting method(s) included.  This finel prompt will be
@@ -387,3 +416,42 @@ Please assess the response for scientific accuracy, logical consistency, and the
 Identify any unsupported claims, logical fallacies, or deviations from established medical or scientific consensus. 
 Your analysis should help ensure that the information provided is reliable, accurate, and in line with current best practices in evidence-based medicine and research.
 """
+
+teaching_styles = {
+    "friendly_teacher": """
+    Mimics the approach of a supportive and understanding educator who guides learners through the material in a conversational and engaging manner.
+    This style emphasizes patience, encouragement, and personalized feedback, making learners feel valued and supported throughout their educational journey.
+    The 'friendly teacher' adapts to the individual's pace and provides explanations, anecdotes, and examples in a way that is easy to understand and relate to.
+    By fostering a positive and welcoming learning environment, this method aims to reduce anxiety and increase motivation, making learning a more enjoyable and less intimidating experience.
+    Interactive elements such as quizzes, casual discussions, and reflective exercises are used to reinforce concepts and gauge understanding in a non-judgmental way.
+    """,
+    "socratic_method": """
+    Encourages learners to think critically and articulate their thoughts through a series of questions and answers. 
+    Ideal for stimulating deep understanding and reflection on complex medical cases or ethical dilemmas. 
+    This method promotes active dialogue and debate, pushing users to explore and defend various viewpoints.
+    """,
+    "problem_based_learning": """
+    Presents users with real-world medical problems to solve, fostering the application of theoretical knowledge to practical scenarios.
+    This approach encourages self-directed learning, research, and collaboration among users to find solutions, simulating real-life medical decision-making processes.
+    """,
+    "flipped_classroom": """
+    Inverts the traditional learning model by having users first explore content independently, such as reading articles or watching videos uploaded to the app.
+    Subsequently, the chatbot engages them in interactive, application-focused activities based on this pre-learnt material, enhancing comprehension and retention.
+    """,
+    "microlearning": """
+    Delivers content in small, manageable segments, focusing on a single concept or skill at a time.
+    Ideal for busy medical professionals, this method facilitates quick learning sessions that fit into tight schedules, making it easier to absorb and retain information.
+    """,
+    "narrative_based_learning": """
+    Uses storytelling and scenarios to convey complex information in a more relatable and engaging manner.
+    By embedding medical knowledge within stories or patient cases, it aids in memorizing facts and understanding procedures, making learning more intuitive and less abstract.
+    """,
+    "simulation_and_role_play": """
+    Allows users to engage in simulated clinical scenarios or role-play exercises, enhancing practical skills, decision-making, and interpersonal communication.
+    This method provides a safe environment to practice and make mistakes, crucial for building confidence in clinical settings.
+    """,
+    "gamification": """
+    Incorporates elements of game design, such as points, levels, and badges, to make the learning process more engaging and motivating.
+    By setting challenges and rewards, it encourages continuous interaction and progress, making education feel more like play.
+    """
+}

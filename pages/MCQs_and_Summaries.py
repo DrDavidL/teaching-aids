@@ -18,8 +18,25 @@ import fitz
 from io import StringIO
 import openai
 from prompts import *
+import datetime
+import pytz
+from fpdf import FPDF
+from io import BytesIO
+
 from langchain.chains import RetrievalQA
 
+class PDF(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 10, 'Chat History', 0, 1, 'C')
+
+@st.cache_data
+def get_summary_from_qa(doc_content, chain_type, teaching_style, summary_template):
+    with st.spinner("Generating summary for a custom chatbot"):
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type=chain_type, retriever=retriever, return_source_documents=True)
+        index_context = f'Use only the reference document for knowledge. Question: {summary_template}'
+        summary_for_chatbot = qa(index_context)
+        return summary_for_chatbot["result"]
 
 def set_llm_chat(model, temperature):
     if model == "openai/gpt-3.5-turbo-0125":
@@ -143,13 +160,16 @@ if 'temp' not in st.session_state:
     
 if "last_uploaded_files" not in st.session_state:
     st.session_state["last_uploaded_files"] = []
+    
+if "pdf_chat_message_history" not in st.session_state:
+    st.session_state.pdf_chat_message_history = []
 
 openai.api_base = "https://openrouter.ai/api/v1"
 openai.api_key = st.secrets["OPENROUTER_API_KEY"]
 
-st.set_page_config(page_title='Tools for Med Ed', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
-st.title("Tools for Medical Education")
-st.write("ALPHA version 0.3")
+st.set_page_config(page_title='Chat and Learn from PDFs', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
+st.title("Chat and Learn from PDFs")
+
 
 with st.sidebar.expander("Select a GPT Language Model", expanded=True):
     st.session_state.model = st.selectbox("Model Options", ("openai/gpt-3.5-turbo-0125", "openai/gpt-4-turbo-preview", "google/gemini-pro"), index=0)
@@ -167,7 +187,10 @@ with st.expander('About Tools for Med Ed - Important Disclaimer'):
     st.write("Author: David Liebovitz, MD, Northwestern University")
     st.info(disclaimer)
     st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
-    st.write("Last updated 9/15/23")
+    st.warning("""Some PDFs are images and not formatted text. If an appropriate outline fails to appear, you may first need to convert your PDF
+        using Adobe Acrobat. Choose: `Scan and OCR`,`Enhance scanned file` \n   Alternatively, sometimes PDFs are created with 
+        unusual fonts or LaTeX symbols. Export the file to Word, re-save as a PDF and try again. Save your updates, upload and voilà, you can chat with your PDF! """)
+    st.write("Last updated 2/13/24")
 
 
  
@@ -175,16 +198,16 @@ with st.expander('About Tools for Med Ed - Important Disclaimer'):
 
 if check_password():
 
-    st.header("Analyze your PDFs!")
+    # st.header("Analyze your PDFs!")
+
+
     st.info("""Embeddings, i.e., reading your file(s) and converting words to numbers, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) and indexed for searching. Then,
-            your selected model (e.g., gpt-3.5-turbo-16k) is used to answer your questions.""")
-    st.warning("""Some PDFs are images and not formatted text. If the summary feature doesn't work, you may first need to convert your PDF
-            using Adobe Acrobat. Choose: `Scan and OCR`,`Enhance scanned file` \n   Alternatively, sometimes PDFs are created with 
-            unusual fonts or LaTeX symbols. Export the file to Word, re-save as a PDF and try again. Save your updates, upload and voilà, you can chat with your PDF! """)
+        your selected model (e.g., gpt-3.5-turbo-16k) is used to answer your questions.""")
+    
     uploaded_files = []
     # os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
-    uploaded_files = st.file_uploader("Choose your file(s)", accept_multiple_files=True)
+    uploaded_files = st.file_uploader("Choose your file(s). Currently uses only your last uploaded file. if your PDF is readable by the tool, an outline will appear to the left.", accept_multiple_files=True)
 
     if uploaded_files is not None:
         documents = load_docs(uploaded_files)
@@ -200,6 +223,16 @@ if check_password():
         # llm = ChatOpenAI(model_name='gpt-3.5-turbo-16k', openai_api_base = "https://api.openai.com/v1/")
 
         qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True,)
+        
+        # Set the context for the subsequent chatbot conversation
+        prepare_summary = key_points_list_for_chatbot.format(context = "{context}")
+             
+        with st.spinner("Generating summary for a custom chatbot"):
+            summary_for_chatbot = get_summary_from_qa(documents, "stuff", "", prepare_summary)
+            
+        with st.sidebar.expander("Topics available to your Chatbot", expanded=True):
+            st.info("Topics Identified in the PDF")
+            st.write(summary_for_chatbot)
 
     else:
         st.warning("No files uploaded.")       
@@ -207,7 +240,8 @@ if check_password():
 
     col1, col2 = st.columns(2)
     with col1:
-        pdf_chat_option = st.radio("Select an Option", ("Generate MCQs from your PDF", "Summarize your PDF", "Ask Questions about your PDF","Appraise a Clinical Trial PDF"))
+        pdf_chat_option = st.selectbox("Select an Option", ("Ask Questions about your PDF", "Generate MCQs from your PDF", "Summarize your PDF", "Appraise a Clinical Trial PDF"))
+    
     
     if pdf_chat_option == "Appraise a Clinical Trial PDF":
         st.write('Note GPT4 is much better; may take a few minutes to run.')
@@ -215,8 +249,7 @@ if check_password():
         user_question = clinical_trial_template
         user_question = user_question.format(word_count=word_count, context = "{context}")
     
-    if pdf_chat_option == "Summarize your PDF":
-        
+    if pdf_chat_option == "Summarize your PDF":        
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
         with col2:
             summary_method= st.radio("Select a Summary Method", ("Standard Summary", "Chain of Density"))
@@ -229,8 +262,7 @@ if check_password():
             user_question = key_points_summary_template
             user_question = user_question.format(word_count=word_count, context = "{context}")
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
-    if pdf_chat_option == "Ask Questions about your PDF":
-        user_question = st.text_input("Please enter your own question about the PDF(s):")
+
         
     if pdf_chat_option == "Generate MCQs from your PDF":
         num_mcq = st.slider("Number of MCQs", 1, 10, 3)
@@ -246,30 +278,100 @@ if check_password():
             user_question = f'Topic for question generation: {user_focus}' + f'\n\n {mcq_generation_template}'
             user_question = user_question.format(num_mcq=num_mcq, context = "{context}")
 
-    if st.button("Generate a Response"):
-        index_context = f'Use only the reference document for knowledge. Question: {user_question}'
+    if pdf_chat_option == "Ask Questions about your PDF":
         
-        pdf_answer = qa(index_context)
 
-        # Append the user question and PDF answer to the session state lists
-        st.session_state.pdf_user_question.append(user_question)
-        st.session_state.pdf_user_answer.append(pdf_answer)
+        # Capture user input. If the user enters a question, proceed with generating a response.
+        if follow_up_question := st.chat_input("Please ask questions about your PDF here!"):
+            # Append the user's question to the chat history.
+            
+            
 
-        # Display the PDF answer
-        st.write(pdf_answer["result"])
+            st.session_state.pdf_chat_message_history.append({"role": "user", "content": follow_up_question})
+            # st.session_state.message_history.append({"role": "user", "content": follow_up_question})
 
-        # Prepare the download string for the PDF questions
-        pdf_download_str = f"{disclaimer}\n\nPDF Questions and Answers:\n\n"
-        for i in range(len(st.session_state.pdf_user_question)):
-            pdf_download_str += f"Question: {st.session_state.pdf_user_question[i]}\n"
-            pdf_download_str += f"Answer: {st.session_state.pdf_user_answer[i]['result']}\n\n"
+            # Display the user's question in the chat interface.
+            with st.chat_message("user"):
+                st.markdown(follow_up_question)
 
-        # Display the expander section with the full thread of questions and answers
-        with st.expander("Your Conversation with your PDF", expanded=False):
+            # Generate and display the assistant's response.
+            with st.chat_message("assistant"):
+                
+                index_context = f'Use only the reference document for knowledge. User question: {follow_up_question}'
+            
+                pdf_answer = qa(index_context)
+                # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
+                response = st.write(pdf_answer["result"])
+            # Append the assistant's response to the chat history.
+            st.session_state.pdf_chat_message_history.append({"role": "assistant", "content": pdf_answer["result"]})
+
+
+        if st.session_state.get('pdf_chat_message_history'):  # Ensure message_history is in session_state
+            make_pdf = st.checkbox("Create a PDF of your Q/A for download?")
+            if make_pdf:
+                with st.spinner('Generating PDF...'):
+                    try:
+                        pdf = PDF()
+                        pdf.add_page()
+                        pdf.set_font("Arial", size=12)
+                        # Format the datetime for display
+                        central_time = pytz.timezone('America/Chicago')
+                        specific_datetime = datetime.datetime.now()
+                        specific_datetime_central = central_time.localize(specific_datetime)
+                        datetime_str = specific_datetime_central.strftime('%A %b %d, %Y at %I:%M %p')
+                        
+                        # Add the formatted datetime to the top of the PDF content
+                        pdf.cell(0, 10, datetime_str, 0, 1, 'C')  # Adjust alignment as needed
+                        
+                        for message in st.session_state.pdf_chat_message_history:
+                            if message["role"] != "system":
+                                text = f"{message['role']}: {message['content']}"
+                                pdf.multi_cell(0, 10, text)
+                                pdf.cell(0, 10, "*" * 20, 0, 1)
+
+                        # Generate PDF content as a byte string
+                        pdf_content = pdf.output(dest='S').encode('latin1')  # 'S' returns the document as a string, then encode to bytes
+
+                        st.download_button(label="Download Chat History as PDF",
+                                        data=pdf_content,
+                                        file_name="chat_history.pdf",
+                                        mime="application/pdf")
+                        st.success('PDF successfully generated!')
+
+                    except Exception as e:
+                        st.error(f'An error occurred: {e}')
+
+        
+        
+        
+        
+        
+        
+    if pdf_chat_option != "Ask Questions about your PDF":
+        if st.button("Generate a Response"):
+            index_context = f'Use only the reference document for knowledge. Question: {user_question}'
+            
+            pdf_answer = qa(index_context)
+
+            # Append the user question and PDF answer to the session state lists
+            st.session_state.pdf_user_question.append(user_question)
+            st.session_state.pdf_user_answer.append(pdf_answer)
+
+            # Display the PDF answer
+            st.write(pdf_answer["result"])
+
+            # Prepare the download string for the PDF questions
+            pdf_download_str = f"{disclaimer}\n\nPDF Questions and Answers:\n\n"
             for i in range(len(st.session_state.pdf_user_question)):
-                st.info(f"Question: {st.session_state.pdf_user_question[i]}", icon="🧐")
-                st.success(f"Answer: {st.session_state.pdf_user_answer[i]['result']}", icon="🤖")
+                pdf_download_str += f"Question: {st.session_state.pdf_user_question[i]}\n"
+                pdf_download_str += f"Answer: {st.session_state.pdf_user_answer[i]['result']}\n\n"
 
-            if pdf_download_str:
-                st.download_button('Download', pdf_download_str, key='pdf_questions')
-        
+            # Display the expander section with the full thread of questions and answers
+            with st.expander("Your Conversation with your PDF", expanded=False):
+                for i in range(len(st.session_state.pdf_user_question)):
+                    st.info(f"Question: {st.session_state.pdf_user_question[i]}", icon="🧐")
+                    st.success(f"Answer: {st.session_state.pdf_user_answer[i]['result']}", icon="🤖")
+
+                if pdf_download_str:
+                    st.download_button('Download', pdf_download_str, key='pdf_questions')
+            
