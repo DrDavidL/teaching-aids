@@ -7,6 +7,7 @@ import datetime
 import pytz
 from fpdf import FPDF
 from io import BytesIO
+st.set_page_config(page_title='Medical Educator Chat Playground', layout = 'centered', page_icon = ':medical_symbol:', initial_sidebar_state = 'auto')
 def check_password2():
     """Returns `True` if the user had the correct password."""
 
@@ -44,6 +45,20 @@ class PDF(FPDF):
 
 st.title('Medical Educator Chat Playground')
 st.info('This is a simple playground to investigate LLM use. Features include enhanced chats, prompt engineering, MCQ generation, and more.')
+disclaimer = """**Disclaimer:** This is a tool to assist education regarding artificial intelligence. Your use of this tool accepts the following:   
+1. This tool does not generate validated medical content. \n 
+2. This tool is not a real doctor. \n    
+3. You will not take any medical action based on the output of this tool. \n   
+"""
+
+
+
+with st.expander('Medical Educator Chat - Important Disclaimer'):
+    st.write("Author: David Liebovitz, MD, Northwestern University")
+    st.info(disclaimer)
+    # st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
+    st.warning("""The accuracy check demonstrated uses a GPT model designed to act as a skeptic; this particular tool doesn't retrieve additional validated information.""")
+    st.write("Last updated 2/13/24")
 
 
 if "message_history" not in st.session_state:
@@ -131,7 +146,12 @@ if check_password2():
         with st.expander("Set Model Options"):
             # Show model options
             st.session_state.openai_model = st.selectbox("Select a model", ["gpt-3.5-turbo-0125", "gpt-4-turbo-preview", "google/gemini-pro"])
+            if st.session_state.openai_model == "gpt-3.5-turbo-0125":
+                st.markdown("Info about this model: [OpenAI GPT-3.5](https://platform.openai.com/docs/models/gpt-3-5-turbo)")
+            if st.session_state.openai_model == "gpt-4-turbo-preview":
+                st.markdown("Info about this model: [OpenAI GPT-4](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo)")
             if st.session_state.openai_model == "google/gemini-pro":
+                st.markdown("Info about this model: [Gemini Pro](https://blog.google/technology/ai/gemini-collection/)")
                 client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
             else:
                 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
