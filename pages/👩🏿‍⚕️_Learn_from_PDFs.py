@@ -201,8 +201,8 @@ if check_password():
     # st.header("Analyze your PDFs!")
 
 
-    st.info("""Embeddings, i.e., reading your file(s) and converting words to numbers, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) and indexed for searching. Then,
-        your selected model (e.g., gpt-3.5-turbo-0125) is used to answer your questions.""")
+    st.info("""This system uses Retrieval Augmented Generation [(RAG)](https://arxiv.org/abs/2005.11401) for interactions with your PDF. The embeddings, i.e., transformations of the words in your PDF into vectors, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) 
+        and then stored in a [FAISS](https://github.com/facebookresearch/faiss) similarity search vector database. Your selected model (e.g., gpt-3.5-turbo-0125) is then used to formulate a final response to your questions.""")
     
     uploaded_files = []
     # os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]

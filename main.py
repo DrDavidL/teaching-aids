@@ -44,7 +44,6 @@ class PDF(FPDF):
 
 
 st.title('Medical Educator Chat Playground')
-st.info('This is a simple playground to investigate LLM use. Features include enhanced chats, prompt engineering, MCQ generation, and more.')
 disclaimer = """**Disclaimer:** This is a tool to assist education regarding artificial intelligence. Your use of this tool accepts the following:   
 1. This tool does not generate validated medical content. \n 
 2. This tool is not a real doctor. \n    
@@ -59,6 +58,8 @@ with st.expander('Medical Educator Chat - Important Disclaimer'):
     # st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
     st.warning("""The accuracy check demonstrated uses a GPT model designed to act as a skeptic; this particular tool doesn't retrieve additional validated information.""")
     st.write("Last updated 2/13/24")
+st.info('This is a simple playground to investigate LLM use. Features include enhanced chats, prompt engineering, MCQ generation, and more.')
+
 
 
 if "message_history" not in st.session_state:
