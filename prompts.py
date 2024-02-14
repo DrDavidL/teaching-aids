@@ -413,7 +413,7 @@ expert_instruction_content = """
 The following is a conversation between a user and an assistant regarding a medical or scientific query. 
 As an expert evidence-based academic physician and researcher, critically analyze the assistant's response. 
 Please assess the response for scientific accuracy, logical consistency, and the presence of evidence-based reasoning. 
-Identify any unsupported claims, logical fallacies, or deviations from established medical or scientific consensus. 
+Be appropriately skeptical and dentify any unsupported claims, logical fallacies, or deviations from established medical or scientific consensus. 
 Your analysis should help ensure that the information provided is reliable, accurate, and in line with current best practices in evidence-based medicine and research.
 """
 

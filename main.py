@@ -315,6 +315,9 @@ if check_password2():
     if st.session_state.get('message_history'):  # Ensure message_history is in session_state
         check_answer = st.checkbox("Request an Expert Evidence-Based Review for the last response.")
         if check_answer:
+            st.warning("Note - this is a separate API call with the prompt below ensuring the latest GPT model (regardless of your choice for this part) is performing as a skeptic assessing the prior response. It is NOT pulling content from the web, and instead raises issues you may wish to verify. ")
+            with st.expander("Expert Skeptic Instruction", expanded = False):
+                st.write(expert_instruction_content)
             with st.spinner('Generating Expert Review...'):
                 try:
                     # Assuming the last two messages in message_history are the user's question and the assistant's response
@@ -331,7 +334,7 @@ if check_password2():
                     
                     # Create a chat completion request to the OpenAI API, passing in the model and the modified messages.
                     stream = client.chat.completions.create(
-                        model=st.session_state["openai_model"],
+                        model= "gpt-4-turbo-preview",
                         messages=[
                             {"role": m["role"], "content": m["content"]}
                             for m in messages_for_analysis
