@@ -167,8 +167,8 @@ if "pdf_chat_message_history" not in st.session_state:
 openai.api_base = "https://openrouter.ai/api/v1"
 openai.api_key = st.secrets["OPENROUTER_API_KEY"]
 
-st.set_page_config(page_title='Chat and Learn from PDFs', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
-st.title("Chat and Learn from PDFs")
+st.set_page_config(page_title='Learn from PDFs', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
+st.title("Learn from PDFs")
 
 
 with st.sidebar.expander("Select a GPT Language Model", expanded=True):
@@ -176,14 +176,14 @@ with st.sidebar.expander("Select a GPT Language Model", expanded=True):
 
 
 disclaimer = """**Disclaimer:** This is a tool to assist education regarding artificial intelligence. Your use of this tool accepts the following:   
-1. This tool does not generate validated medical content. \n 
+1. This tool does not generate validated medical content although attempts are made to 'ground' responses based on the user submitted PDF. \n 
 2. This tool is not a real doctor. \n    
 3. You will not take any medical action based on the output of this tool. \n   
 """
 
 
 
-with st.expander('About Tools for Med Ed - Important Disclaimer'):
+with st.expander('Learn from PDFs - Important Disclaimer'):
     st.write("Author: David Liebovitz, MD, Northwestern University")
     st.info(disclaimer)
     st.session_state.temp = st.slider("Select temperature (Higher values more creative but tangential and more error prone)", 0.0, 1.0, 0.5, 0.01)
@@ -201,8 +201,8 @@ if check_password():
     # st.header("Analyze your PDFs!")
 
 
-    st.info("""Embeddings, i.e., reading your file(s) and converting words to numbers, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) and indexed for searching. Then,
-        your selected model (e.g., gpt-3.5-turbo-16k) is used to answer your questions.""")
+    st.info("""This system uses Retrieval Augmented Generation [(RAG)](https://arxiv.org/abs/2005.11401) for interactions with your PDF. The embeddings, i.e., transformations of the words in your PDF into vectors, are created using an OpenAI [embedding model](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) 
+        and then stored in a [FAISS](https://github.com/facebookresearch/faiss) similarity search vector database. Your selected model (e.g., gpt-3.5-turbo-0125) is then used to formulate a final response to your questions.""")
     
     uploaded_files = []
     # os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
