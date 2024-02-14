@@ -313,7 +313,7 @@ if check_password2():
     #     if "messages" in st.session_state:
     #         st.write(st.session_state.messages)
     if st.session_state.get('message_history'):  # Ensure message_history is in session_state
-        check_answer = st.checkbox("Request an Expert Evidence-Based Review for the last response.")
+        check_answer = st.checkbox("Request a Skeptical AI review the last response.")
         if check_answer:
             st.warning("Note - this is a separate API call with the prompt below ensuring the latest GPT model (regardless of your choice for this part) is performing as a skeptic assessing the prior response. It is NOT pulling content from the web, and instead raises issues you may wish to verify. ")
             with st.expander("Expert Skeptic Instruction", expanded = False):
