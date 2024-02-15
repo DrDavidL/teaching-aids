@@ -17,11 +17,13 @@ import os
 import fitz
 from io import StringIO
 import openai
+from openai import OpenAI
 from prompts import *
 import datetime
 import pytz
 from fpdf import FPDF
 from io import BytesIO
+import base64
 
 from langchain.chains import RetrievalQA
 
@@ -29,6 +31,34 @@ class PDF(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 12)
         self.cell(0, 10, 'Chat History', 0, 1, 'C')
+        
+def talk_stream(model, voice, input):
+    api_key = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(    
+    base_url="https://api.openai.com/v1",
+    api_key=api_key,
+)
+    response = client.audio.speech.create(
+    model= model,
+    voice= voice,
+    input= input,
+    )
+    response.stream_to_file("last_response.mp3")
+    
+def autoplay_local_audio(filepath: str):
+    # Read the audio file from the local file system
+    with open(filepath, 'rb') as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    md = f"""
+        <audio controls autoplay="true">
+        <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+        </audio>
+        """
+    st.markdown(
+        md,
+        unsafe_allow_html=True,
+    )
 
 @st.cache_data
 def get_summary_from_qa(doc_content, chain_type, teaching_style, summary_template):
@@ -139,6 +169,8 @@ def check_password():
     else:
         # Password correct.
         return True
+if "last_response" not in st.session_state:
+    st.session_state.last_response = ""
     
 if "pdf_retriever" not in st.session_state:
     st.session_state.pdf_retriever = []
@@ -166,6 +198,7 @@ if "pdf_chat_message_history" not in st.session_state:
 
 openai.api_base = "https://openrouter.ai/api/v1"
 openai.api_key = st.secrets["OPENROUTER_API_KEY"]
+unplayed = False
 
 st.set_page_config(page_title='Learn from PDFs', layout = 'centered', page_icon = ':stethoscope:', initial_sidebar_state = 'auto')
 st.title("Learn from PDFs")
@@ -242,6 +275,8 @@ if check_password():
     with col1:
         pdf_chat_option = st.selectbox("Select an Option", ("Ask Questions about your PDF", "Generate MCQs from your PDF", "Summarize your PDF", "Appraise a Clinical Trial PDF"))
     
+    with col2:
+        st.session_state.audio_off = st.checkbox("Turn off voice generation", value=False) 
     
     if pdf_chat_option == "Appraise a Clinical Trial PDF":
         st.write('Note GPT4 is much better; may take a few minutes to run.')
@@ -302,6 +337,8 @@ if check_password():
                 pdf_answer = qa(index_context)
                 # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
                 response = st.write(pdf_answer["result"])
+                st.session_state.last_response = pdf_answer["result"]
+                unplayed = True
             # Append the assistant's response to the chat history.
             st.session_state.pdf_chat_message_history.append({"role": "assistant", "content": pdf_answer["result"]})
 
@@ -359,6 +396,9 @@ if check_password():
 
             # Display the PDF answer
             st.write(pdf_answer["result"])
+            st.session_state.last_response = pdf_answer["result"]
+            unplayed = True
+            
 
             # Prepare the download string for the PDF questions
             pdf_download_str = f"{disclaimer}\n\nPDF Questions and Answers:\n\n"
@@ -374,4 +414,34 @@ if check_password():
 
                 if pdf_download_str:
                     st.download_button('Download', pdf_download_str, key='pdf_questions')
+        
             
+    if st.session_state.audio_off == False and unplayed == True:
+        if st.session_state.last_response != "":
+            
+            #     patient_section = extract_patient_response(st.session_state.last_response_interview)
+            # st.write(patient_section)
+             
+                # Define the data
+            # path_audio = play_audio_eleven(st.session_state.last_response_interview, voice=voice)
+            talk_stream("tts-1", "shimmer", st.session_state.last_response)
+            
+            # data = {
+            #     "text": st.session_state.last_response_interview,
+            #     "voice": voice,
+            # }
+
+            # Send the POST request
+            # response_from_audio = requests.post(audio_url, headers=headers, data=json.dumps(data))
+            # st.sidebar.write(response_from_audio.text)
+            # st.write(f'Audio full: {response_from_audio.text}')
+            # st.write(f'Audio url: {response_from_audio.json()}')
+            # Print the response
+            # link_to_audio = extract_url(response_from_audio.text)
+            # st.write(path_audio)
+            autoplay_local_audio("last_response.mp3")
+            with st.expander("Audio Transcript", expanded=True):
+                st.write(st.session_state.last_response)
+            unplayed = False
+        else:
+            pass

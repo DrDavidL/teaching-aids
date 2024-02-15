@@ -7,6 +7,54 @@ import datetime
 import pytz
 from fpdf import FPDF
 from io import BytesIO
+import base64
+from audio_recorder_streamlit import audio_recorder
+import tempfile
+
+def transcribe_audio(audio_file_path):
+
+    api_key = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(    
+        base_url="https://api.openai.com/v1",
+        api_key=api_key,
+    )
+    audio_file = open(audio_file_path, "rb")
+    transcript = client.audio.transcriptions.create(
+    model="whisper-1", 
+    file=audio_file, 
+    response_format="text"
+    )
+    return transcript
+
+unplayed = False
+def talk_stream(model, voice, input):
+    api_key = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(    
+    base_url="https://api.openai.com/v1",
+    api_key=api_key,
+)
+    response = client.audio.speech.create(
+    model= model,
+    voice= voice,
+    input= input,
+    )
+    response.stream_to_file("last_response.mp3")
+    
+def autoplay_local_audio(filepath: str):
+    # Read the audio file from the local file system
+    with open(filepath, 'rb') as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    md = f"""
+        <audio controls autoplay="true">
+        <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+        </audio>
+        """
+    st.markdown(
+        md,
+        unsafe_allow_html=True,
+    )
+
 def check_password2():
     """Returns `True` if the user had the correct password."""
 
@@ -51,6 +99,15 @@ if "message_history" not in st.session_state:
 
 if "improved_question" not in st.session_state:
     st.session_state["improved_question"] = ""
+    
+if "last_response" not in st.session_state:
+    st.session_state["last_response"] = ""
+    
+if "audio_off" not in st.session_state:
+    st.session_state["audio_off"] = False
+    
+if "follow_up_question" not in st.session_state:
+    st.session_state["follow_up_question"] = ""
     
 # if "messsages" not in st.session_state:
 #     st.session_state["messages"] = []
@@ -164,7 +221,7 @@ if check_password2():
 
             st.write(f"Selected: {strategy_string}")
 
-    user_prompt = st.text_input("Enter your question:")
+    st.session_state.user_prompt = st.text_input("Enter your question:")
     
     if st.button("Make my question better!"):
 
@@ -172,7 +229,7 @@ if check_password2():
             model=st.session_state["openai_model"],
             messages=[
                 {"role": "system", "content": system_prompt_improve_question},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": st.session_state.user_prompt}
             ],
             stream=False,
         )
@@ -182,6 +239,7 @@ if check_password2():
         st.text_area("Improved Question", st.session_state.improved_question, height=150, key="improved_question_text_area")
     use_original = st.checkbox("Check to use your original question (otherwise we'll use the updated version)")
     send_question = st.button("Submit Question to Start Chat (clears old chat history; last still appears for convenience).")
+    st.session_state.audio_off = st.checkbox("Turn off audio for this session.")
 
     # Display previous chat messages. This loop goes through all messages and displays them, skipping system messages.
     if "messages" in st.session_state:
@@ -193,7 +251,7 @@ if check_password2():
     if send_question:
         st.session_state.messages =[]
         if use_original:
-            first_prompt = user_prompt
+            first_prompt = st.session_state.user_prompt
         else:
             first_prompt = st.session_state.improved_question
             # Append the user's question to the chat history.
@@ -235,18 +293,47 @@ if check_password2():
 
 
     # Capture user input. If the user enters a question, proceed with generating a response.
-    if follow_up_question := st.chat_input("Please ask follow-up questions here!"):
+   
+    audio_input = st.checkbox("Talk instead of typing")
+    if audio_input:
+        with st.sidebar:
+            audio_bytes = audio_recorder(
+                text="Click, pause, and ask a question:",
+                recording_color="#e8b62c",
+                neutral_color="#6aa36f",
+                icon_name="user",
+                icon_size="3x",
+                )
+        if audio_bytes:
+            # Save audio bytes to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
+                fp.write(audio_bytes)
+                audio_file_path = fp.name
+
+            # Display the audio file
+            # st.session_state.audio_input = st.audio(audio_bytes, format="audio/wav")
+
+            # Transcribe the audio file
+            # if st.sidebar.button("Send Audio"):
+            st.session_state.follow_up_question = transcribe_audio(audio_file_path)
+    
+    
+    else: 
+        follow_up_question = st.chat_input("Please ask follow-up questions here!")
+        if follow_up_question:
+            st.session_state.follow_up_question = follow_up_question
+    if st.session_state.follow_up_question:
         # Append the user's question to the chat history.
         if st.session_state.openai_model == "google/gemini-pro":
             client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
         else:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        st.session_state.messages.append({"role": "user", "content": follow_up_question})
-        st.session_state.message_history.append({"role": "user", "content": follow_up_question})
+        st.session_state.messages.append({"role": "user", "content": st.session_state.follow_up_question})
+        st.session_state.message_history.append({"role": "user", "content": st.session_state.follow_up_question})
 
         # Display the user's question in the chat interface.
         with st.chat_message("user"):
-            st.markdown(follow_up_question)
+            st.markdown(st.session_state.follow_up_question)
 
         # Generate and display the assistant's response.
         with st.chat_message("assistant"):
@@ -260,10 +347,23 @@ if check_password2():
                 stream=True,
             )
             # Display the response from the API.
-            response = st.write_stream(stream)
+            st.session_state.last_response = st.write_stream(stream)
+            # st.session_state.last_response = response
+        unplayed = True
         # Append the assistant's response to the chat history.
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.session_state.message_history.append({"role": "assistant", "content": response})
+        st.session_state.messages.append({"role": "assistant", "content": st.session_state.last_response})
+        st.session_state.message_history.append({"role": "assistant", "content": st.session_state.last_response})
+        
+    # Play the audio response
+        # if st.session_state.last_response != "":
+    if st.button("Play Audio"):
+
+        talk_stream("tts-1", "shimmer", st.session_state.last_response)
+        
+        autoplay_local_audio("last_response.mp3")
+        with st.expander("Audio Transcript", expanded=True):
+            st.write(st.session_state.last_response)
+        unplayed = False
 
     with st.expander("Full Chat History and Printing"):
         # Display previous chat messages. This loop goes through all messages and displays them, skipping system messages.
@@ -346,3 +446,5 @@ if check_password2():
                     response = st.write_stream(stream)
                 except Exception as e:
                     st.error(f'An error occurred: {e}')
+                    
+

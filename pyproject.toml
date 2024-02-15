@@ -17,6 +17,7 @@ faiss-cpu = "^1.7.4"
 langchain-community = "^0.0.19"
 fpdf = "^1.7.2"
 pytz = "^2024.1"
+audio-recorder-streamlit = "^0.0.8"
 
 
 [build-system]

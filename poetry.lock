@@ -198,6 +198,20 @@ tests-mypy = ["mypy (>=1.6)", "pytest-mypy-plugins"]
 tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "pytest (>=4.3.0)", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "audio-recorder-streamlit"
+version = "0.0.8"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "audio-recorder-streamlit-0.0.8.tar.gz", hash = "sha256:f7253b9291a040769188ae76e7b1dd27d7004f87691af73a848d939d673e2ec3"},
+    {file = "audio_recorder_streamlit-0.0.8-py3-none-any.whl", hash = "sha256:c7f2fba58e55535830dc203418ab9b29aff3baf3248a219f6ef31d775ce44c3c"},
+]
+
+[package.dependencies]
+streamlit = ">=0.63"
+
+[[package]]
 name = "blinker"
 version = "1.7.0"
 description = "Fast, simple object-to-object and broadcast signaling"
@@ -2525,4 +2539,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4d4021a9b54f3cf441f93b7b6ad3428353c66342ef82b675d930c770efc7412b"
+content-hash = "724d7aa857964d6e9c2741c0ec142b1fdf39c47472161c303068150ec5d4c534"
