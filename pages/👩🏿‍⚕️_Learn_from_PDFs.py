@@ -196,7 +196,7 @@ with st.expander('Learn from PDFs - Important Disclaimer'):
  
 
 
-if check_password():
+if st.secrets["use_docker"]=="True" or check_password():
 
     # st.header("Analyze your PDFs!")
 

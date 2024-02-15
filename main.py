@@ -126,7 +126,7 @@ method_mapping = {
     "Self Discovery Prompting": problem_solving_Self_Discover_Prompting,
 }
 
-if check_password2():
+if st.secrets["use_docker"]  == "True" or check_password2():
     with st.sidebar:
         with st.expander("Set Model Options"):
             # Show model options
