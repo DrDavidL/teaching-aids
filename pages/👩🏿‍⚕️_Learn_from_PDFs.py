@@ -17,13 +17,29 @@ import os
 import fitz
 from io import StringIO
 import openai
+from openai import OpenAI
 from prompts import *
 import datetime
 import pytz
 from fpdf import FPDF
 from io import BytesIO
+import json
 
 from langchain.chains import RetrievalQA
+
+@st.cache_data
+def return_questions(model= "gpt-4-turbo-preview", response_format = { "type": "json_object" }, stream = False, system_prompt = '', user_prompt = ""):
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    prepare_options = client.chat.completions.create(
+        model=model,
+        response_format=response_format,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        stream=stream,
+            )
+    return prepare_options.choices[0].message.content
 
 class PDF(FPDF):
     def header(self):
@@ -163,6 +179,15 @@ if "last_uploaded_files" not in st.session_state:
     
 if "pdf_chat_message_history" not in st.session_state:
     st.session_state.pdf_chat_message_history = []
+    
+if "pdf_outline" not in st.session_state:
+    st.session_state.pdf_outline = ''
+    
+if "question_list" not in st.session_state:
+    st.session_state.question_list = []
+    
+if "follow_up_question" not in st.session_state:
+    st.session_state.follow_up_question = ""
 
 openai.api_base = "https://openrouter.ai/api/v1"
 openai.api_key = st.secrets["OPENROUTER_API_KEY"]
@@ -231,8 +256,9 @@ if st.secrets["use_docker"]=="True" or check_password():
             summary_for_chatbot = get_summary_from_qa(documents, "stuff", "", prepare_summary)
             
         with st.sidebar.expander("Topics available to your Chatbot", expanded=True):
-            st.info("Topics Identified in the PDF")
+            st.info("Outline from the PDF")
             st.write(summary_for_chatbot)
+            st.session_state.pdf_outline = summary_for_chatbot
 
     else:
         st.warning("No files uploaded.")       
@@ -240,7 +266,7 @@ if st.secrets["use_docker"]=="True" or check_password():
 
     col1, col2 = st.columns(2)
     with col1:
-        pdf_chat_option = st.selectbox("Select an Option", ("Ask Questions about your PDF", "Generate MCQs from your PDF", "Summarize your PDF", "Appraise a Clinical Trial PDF"))
+        pdf_chat_option = st.selectbox("Select an Option", ("Summarize your PDF", "Ask Questions about your PDF", "Generate MCQs from your PDF", "Appraise a Clinical Trial PDF"))
     
     
     if pdf_chat_option == "Appraise a Clinical Trial PDF":
@@ -261,6 +287,10 @@ if st.secrets["use_docker"]=="True" or check_password():
         if summary_method == "Standard Summary":
             user_question = key_points_summary_template
             user_question = user_question.format(word_count=word_count, context = "{context}")
+            
+        # if summary_method == "Ten Points Summary":
+        #     user_question = ten_points_summary_tempate
+        #     user_question = user_question.format(word_count=word_count, context = "{context}")
         # user_question = "Summary: Using context provided, generate a concise and comprehensive summary. Key Points: Generate a list of Key Points by using a conclusion section if present and the full context otherwise."
 
         
@@ -279,31 +309,101 @@ if st.secrets["use_docker"]=="True" or check_password():
             user_question = user_question.format(num_mcq=num_mcq, context = "{context}")
 
     if pdf_chat_option == "Ask Questions about your PDF":
-        
+        your_question = st.checkbox("Ask a custom question about your PDF.")
+        if your_question == False:
+            json_questions = return_questions(model= "gpt-4-turbo-preview", response_format = { "type": "json_object" }, stream = False, system_prompt = ten_questions, user_prompt = st.session_state.pdf_outline)
+            # client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            # prepare_options = client.chat.completions.create(
+            #     model="gpt-4-turbo-preview",
+            #     response_format={ "type": "json_object" },
+            #     messages=[
+            #         {"role": "system", "content": ten_questions},
+            #         {"role": "user", "content": st.session_state.pdf_outline}
+            #     ],
+            #     stream=False,
+            # )
+            # json_questions = prepare_options.choices[0].message.content
+            
+            # st.write(st.session_state["question_list"])
+            # Parse the JSON data
+            try:
+                data = json.loads(json_questions)
+                # st.write(data)
+                questions_list = data["questions"]
+                # st.write(questions_list)
+            except json.JSONDecodeError as e:
+                st.write(f"Failed to decode JSON: {e}")
+                questions_list = []  #
 
-        # Capture user input. If the user enters a question, proceed with generating a response.
-        if follow_up_question := st.chat_input("Please ask questions about your PDF here!"):
-            # Append the user's question to the chat history.
+            # Extract just the questions into a list
+            st.session_state.question_list = questions_list
             
             
+            # st.write(st.session_state["question_list"])
+            # Initialize an empty list to store each question and its toggle state
+            questions_with_toggles = []
 
-            st.session_state.pdf_chat_message_history.append({"role": "user", "content": follow_up_question})
-            # st.session_state.message_history.append({"role": "user", "content": follow_up_question})
-
-            # Display the user's question in the chat interface.
-            with st.chat_message("user"):
-                st.markdown(follow_up_question)
-
-            # Generate and display the assistant's response.
-            with st.chat_message("assistant"):
+            # Iterate over your list of questions
+            for i, question in enumerate(st.session_state.question_list, start=1):
+                # Create a toggle for each question and capture its state
+                toggle_state = st.toggle(question, False)
                 
-                index_context = f'Use only the reference document for knowledge. User question: {follow_up_question}'
-            
-                pdf_answer = qa(index_context)
-                # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
-                response = st.write(pdf_answer["result"])
-            # Append the assistant's response to the chat history.
-            st.session_state.pdf_chat_message_history.append({"role": "assistant", "content": pdf_answer["result"]})
+                # Append a dictionary with the question text and its toggle state to the list
+                questions_with_toggles.append({"question": question, "state": toggle_state})
+
+            active_questions = []  # List to hold questions with toggles set to True
+
+            # Iterate over the list of questions and their toggle states
+            for item in questions_with_toggles:
+                if item["state"]:  # Check if the toggle is on (True)
+                    # Add the question to the list of active questions
+                    active_questions.append(item["question"])
+
+            # Construct the final string by joining the active questions with " and "
+            selected_questions = " and ".join(active_questions)
+
+            # Now, 'questions_with_toggles' contains each question and its toggle state
+
+            # selected_question = st.selectbox("Select a Question", options = st.session_state["question_list"])
+            if selected_questions:
+                st.session_state["follow_up_question"] = selected_questions
+            if st.button("Submit Selected Question"):
+                with st.chat_message("user"):
+                    st.markdown(st.session_state.follow_up_question)
+
+                # Generate and display the assistant's response.
+                with st.chat_message("assistant"):
+                    
+                    index_context = f'Use only the reference document for knowledge. User question: {st.session_state.follow_up_question}'
+                
+                    pdf_answer = qa(index_context)
+                    # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
+                    response = st.write(pdf_answer["result"])
+                # Append the assistant's response to the chat history.
+                st.session_state.pdf_chat_message_history.append({"role": "assistant", "content": pdf_answer["result"]})
+                   
+        if your_question:
+            st.warning("Please enter your question at the bottom of the page.")
+            if follow_up_question := st.chat_input("Please ask questions about your PDF here!"):            
+                st.session_state.follow_up_question = follow_up_question
+
+                st.session_state.pdf_chat_message_history.append({"role": "user", "content": st.session_state.follow_up_question})
+                # st.session_state.message_history.append({"role": "user", "content": follow_up_question})
+
+                # Display the user's question in the chat interface.
+                with st.chat_message("user"):
+                    st.markdown(st.session_state.follow_up_question)
+
+                # Generate and display the assistant's response.
+                with st.chat_message("assistant"):
+                    
+                    index_context = f'Use only the reference document for knowledge. User question: {st.session_state.follow_up_question}'
+                
+                    pdf_answer = qa(index_context)
+                    # Create a chat completion request to the OpenAI API, passing in the model and the conversation history.
+                    response = st.write(pdf_answer["result"])
+                # Append the assistant's response to the chat history.
+                st.session_state.pdf_chat_message_history.append({"role": "assistant", "content": pdf_answer["result"]})
 
 
         if st.session_state.get('pdf_chat_message_history'):  # Ensure message_history is in session_state

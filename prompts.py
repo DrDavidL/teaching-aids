@@ -108,6 +108,20 @@ The summary should be approximately {word_count} words in length. Ensure that th
 **Summary**: A coherent and comprehensive summary of the original content.
 """
 
+ten_points_summary_tempate = """
+Context: {context}
+Word Count Goal: {word_count}
+Objective: Create a summary that encompasses the core concepts and significant details, addressing the top 10 anticipated questions a physician might ask about the subject.
+
+Format:
+1. **Factual Assertions**:
+   - Bullet points summarizing critical ideas and specifics.
+   
+2. **Comprehensive Summary**:
+   - An integrated and detailed narrative of the content, ensuring clarity, brevity, and fidelity to the original material.
+"""
+
+
 key_points_list_for_chatbot = """Given the {context}, generate a comprehensive list of topics and sub-topics suitable for teaching and discussion. 
 Ensure this list is coherent, free of redundancies, and effectively effectively organized to convey the essence of the original material. Format as per this example with likely greater detail and many subtopics:
 
@@ -456,3 +470,22 @@ teaching_styles = {
     By setting challenges and rewards, it encourages continuous interaction and progress, making education feel more like play.
     """
 }
+
+
+ten_questions = """
+Input: Outline of an Article 
+Output: Return 5 questions (no answers) whose answers are *likely covered* in the full document. JSON format.
+
+Objective: Return questions likely covered in the article that would be of interest to a physician.
+
+Instructions:
+1. Examine the outline to identify main subjects and details.
+2. Craft straightforward, one aspect at at time questions to explore, e.g., diagnosis, treatment, prognosis, etc.
+
+Output format: Return 5 questions, JSON format, without answers.
+
+Example of a good question for an outline on Tb:
+"What are the treatment recommendations for latent tuberculosis infection (LTBI) in adults?"
+
+"""
+
