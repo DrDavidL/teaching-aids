@@ -329,7 +329,7 @@ if st.secrets["use_docker"]=="True" or check_password():
             try:
                 data = json.loads(json_questions)
                 # st.write(data)
-                questions_list = data["questions"]
+                questions_list = [value for key, value in data.items()]
                 # st.write(questions_list)
             except json.JSONDecodeError as e:
                 st.write(f"Failed to decode JSON: {e}")

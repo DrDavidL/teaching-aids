@@ -480,12 +480,21 @@ Objective: Return questions likely covered in the article that would be of inter
 
 Instructions:
 1. Examine the outline to identify main subjects and details.
-2. Craft straightforward, one aspect at at time questions to explore, e.g., diagnosis, treatment, prognosis, etc.
+2. Craft straightforward, one specific aspect at at time questions to explore, e.g., diagnosis, treatment, prognosis, etc.
 
 Output format: Return 5 questions, JSON format, without answers.
 
-Example of a good question for an outline on Tb:
-"What are the treatment recommendations for latent tuberculosis infection (LTBI) in adults?"
+Example JSON formatting and type of questions:
+
+```
+{
+  "Question1": "What are the pathophysiological mechanisms underlying Gastroesophageal Reflux Disease (GERD)?",
+  "Question2": "How are the clinical manifestations of GERD different from those of Laryngopharyngeal Reflux (LPR)?",
+  "Question3": "What evidence-based treatments are recommended for GERD?",
+  "Question4": "What are the screening guidelines for Barrett's Esophagus in patients with GERD?",
+  "Question5": "What are the indications for Endoscopic Eradication Therapy (EET) in the management of GERD?"
+}
+```
 
 """
 
