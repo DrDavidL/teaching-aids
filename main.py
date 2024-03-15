@@ -130,8 +130,8 @@ if st.secrets["use_docker"]  == "True" or check_password2():
     with st.sidebar:
         with st.expander("Set Model Options"):
             # Show model options
-            st.session_state.openai_model = st.selectbox("Select a model", ["gpt-3.5-turbo-0125", "gpt-4-turbo-preview", "google/gemini-pro"])
-            if st.session_state.openai_model == "google/gemini-pro":
+            st.session_state.openai_model = st.selectbox("Select a model", ["gpt-3.5-turbo", "gpt-4-turbo-preview", "google/gemini-pro", "anthropic/claude-3-sonnet"])
+            if st.session_state.openai_model == "google/gemini-pro" or st.session_state.openai_model == "anthropic/claude-3-sonnet":
                 client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
             else:
                 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -240,7 +240,7 @@ if st.secrets["use_docker"]  == "True" or check_password2():
     # Capture user input. If the user enters a question, proceed with generating a response.
     if follow_up_question := st.chat_input("Please ask follow-up questions here!"):
         # Append the user's question to the chat history.
-        if st.session_state.openai_model == "google/gemini-pro":
+        if st.session_state.openai_model == "google/gemini-pro" or st.session_state.openai_model == "anthropic/claude-3-sonnet":
             client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url = "https://openrouter.ai/api/v1")
         else:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
