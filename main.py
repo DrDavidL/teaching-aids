@@ -138,9 +138,12 @@ if st.secrets["use_docker"]  == "True" or check_password2():
             
         with st.expander("Prompt Engineering Strategies"):
             st.warning('If options are changed, they are applied after "Submit Question to start chat" is clicked!')
-            choose_system_prompt = st.selectbox("Choose a system prompt", ["Medical Educator System", "General Expert", "Your own!"])
+            choose_system_prompt = st.selectbox("Choose a system prompt", ["Expert Panel","Medical Educator System", "General Expert", "Your own!"])
             if choose_system_prompt == "Your own!":
                 system_prompt = st.text_area("Enter your own prompt")
+                
+            elif choose_system_prompt == "Expert Panel":
+                system_prompt = expert_panel_system_prompt
 
             elif choose_system_prompt == "Medical Educator System":
                 system_prompt = medical_educator_system_prompt
